@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/fleezesd/progressive-microservice/product-api/handler"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
@@ -17,8 +18,18 @@ func main() {
 	ph := handler.NewProducts(l)
 
 	// create a new serve mux and register handlers
-	sm := http.NewServeMux()
-	sm.Handle("/products", ph)
+	sm := mux.NewRouter().PathPrefix("/products").Subrouter()
+
+	getRouter := sm.Methods(http.MethodGet).Subrouter()
+	getRouter.HandleFunc("", ph.GetProducts)
+
+	postRouter := sm.Methods(http.MethodPost).Subrouter()
+	postRouter.HandleFunc("", ph.AddProduct)
+	postRouter.Use(ph.MiddlewareValidateProduct)
+
+	putRouter := sm.Methods(http.MethodPut).Subrouter()
+	putRouter.HandleFunc("/{id:[0-9]+}", ph.UpdateProducts)
+	putRouter.Use(ph.MiddlewareValidateProduct)
 
 	// create a new server
 	s := http.Server{
@@ -31,7 +42,8 @@ func main() {
 	// server start
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
-			l.Fatal(err)
+			l.Printf("Error starting server: %s\n", err)
+			os.Exit(1)
 		}
 	}()
 
