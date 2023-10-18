@@ -12,10 +12,10 @@ import (
 // Product defines the structure for an API product
 type Product struct {
 	ID          int     `json:"id"`
-	Name        string  `json:"name"   validate:"required,sku"`
+	Name        string  `json:"name"   validate:"required"`
 	Description string  `json:"description"`
-	Price       float32 `json:"price"`
-	SKU         string  `json:"sku"`
+	Price       float32 `json:"price"  validate:"gt=0"`
+	SKU         string  `json:"sku"    validate:"required,sku"`
 	CreatedOn   string  `json:"-"`
 	UpdatedOn   string  `json:"-"`
 	DeletedOn   string  `json:"-"`
@@ -45,7 +45,7 @@ func (p *Product) SkuValidation(fl validator.FieldLevel) bool {
 
 func (p *Product) FromJSON(r io.Reader) error {
 	d := json.NewDecoder(r)
-	return d.Decode(d)
+	return d.Decode(p)
 }
 
 type Products []*Product

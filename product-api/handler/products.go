@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/fleezesd/progressive-microservice/product-api/data"
 	"github.com/gorilla/mux"
 	"log"
@@ -72,15 +71,14 @@ func (p *Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 			return
 		}
 
-		// add the product to the context
-		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
-		r = r.WithContext(ctx)
-		fmt.Println(prod)
 		err = prod.Validate()
 		if err != nil {
 			p.l.Println("[ERROR] validate error", err)
 			http.Error(rw, "json validate error", http.StatusInternalServerError)
 		}
+		// add the product to the context
+		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
+		r = r.WithContext(ctx)
 
 		// call the next handler
 		next.ServeHTTP(rw, r)
